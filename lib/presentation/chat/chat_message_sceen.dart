@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:chat_app/data/models/chat_message.dart';
 import 'package:chat_app/data/services/service_locator.dart';
+import 'package:chat_app/data/services/video_call_service.dart';
 import 'package:chat_app/config/theme/app_theme.dart';
 import 'package:chat_app/logic/cubits/chat/chat_cubit.dart';
 import 'package:chat_app/logic/cubits/chat/chat_state.dart';
@@ -87,6 +88,40 @@ class _ChatMessageSceenState extends State<ChatMessageSceen> {
     if (messages.length != _previousMessages.length) {
       _scrollToBottom();
       _previousMessages = messages;
+    }
+  }
+
+  Future<void> _startVideoCall() async {
+    try {
+      final videoService = getIt<VideoCallService>();
+      
+      // Initialize video service if not already done
+      if (videoService.streamVideo == null) {
+        // You'll need to get these from your Stream dashboard
+        await videoService.initialize(
+          userId: _chatCubit.currentUserId,
+          userName: widget.currentUserName,
+          apiKey: 'your_stream_api_key', // Replace with your API key
+          token: 'your_user_token', // Replace with your user token
+        );
+      }
+
+      final callId = '${_chatCubit.currentUserId}_${widget.receiverId}_${DateTime.now().millisecondsSinceEpoch}';
+      
+      await videoService.startCall(
+        callId: callId,
+        memberIds: [widget.receiverId],
+        context: context,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start video call: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
     }
   }
 
@@ -205,7 +240,7 @@ class _ChatMessageSceenState extends State<ChatMessageSceen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
-              onPressed: () {},
+              onPressed: () => _startVideoCall(),
               icon: const Icon(
                 Icons.videocam_rounded,
                 color: AppTheme.primaryColor,

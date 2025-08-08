@@ -30,9 +30,22 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+    _setFullScreen();
     _initAnimations();
     _startAnimations();
     _navigateAfterDelay();
+  }
+
+  void _setFullScreen() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
   }
 
   void _initAnimations() {
@@ -103,6 +116,9 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigateAfterDelay() async {
     await Future.delayed(const Duration(milliseconds: 3000));
     
+    // Restore system UI
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    
     final authState = getIt<AuthCubit>().state;
     
     if (mounted) {
@@ -124,29 +140,24 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-      ),
-    );
-
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: _backgroundController,
-        builder: (context, child) {
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.primaryColor.withOpacity(_backgroundOpacity.value),
-                  AppTheme.secondaryColor.withOpacity(_backgroundOpacity.value),
-                ],
+      body: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: AnimatedBuilder(
+          animation: _backgroundController,
+          builder: (context, child) {
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.primaryColor.withOpacity(_backgroundOpacity.value),
+                    AppTheme.secondaryColor.withOpacity(_backgroundOpacity.value),
+                  ],
+                ),
               ),
-            ),
-            child: SafeArea(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -243,9 +254,9 @@ class _SplashScreenState extends State<SplashScreen>
                   const SizedBox(height: 50),
                 ],
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
