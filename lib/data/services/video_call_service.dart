@@ -24,6 +24,7 @@ class VideoCallService {
       _currentUser = User(
         id: userId,
         name: userName,
+        image: null,
       );
 
       _streamVideo = StreamVideo(
@@ -63,9 +64,8 @@ class VideoCallService {
       id: callId,
     );
 
-    final members = memberIds.map((id) => MemberRequest(userId: id)).toList();
-    
-    await call.getOrCreate(memberExternalIds: memberIds);
+    // Create the call with member IDs
+    await call.getOrCreate(memberIds: memberIds);
     
     return call;
   }
@@ -160,8 +160,9 @@ class _CallScreenState extends State<CallScreen> {
 
   void _setupCall() async {
     try {
-      await widget.call.camera.enable();
-      await widget.call.microphone.enable();
+      // Enable camera and microphone
+      await widget.call.setCameraEnabled(enabled: true);
+      await widget.call.setMicrophoneEnabled(enabled: true);
     } catch (e) {
       log('Error setting up call: $e');
     }
@@ -179,10 +180,10 @@ class _CallScreenState extends State<CallScreen> {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: StreamBuilder<CallState>(
-          stream: widget.call.state.valueStream,
+          stream: widget.call.state,
           builder: (context, snapshot) {
             final callState = snapshot.data;
-            final participants = callState?.callParticipants ?? [];
+            final participants = callState?.callParticipants.values.toList() ?? [];
 
             return Stack(
               children: [
@@ -219,12 +220,13 @@ class _CallScreenState extends State<CallScreen> {
     );
   }
 
-  Widget _buildParticipantsView(List<CallParticipant> participants) {
+  Widget _buildParticipantsView(List<CallParticipantState> participants) {
     if (participants.length == 1) {
       return SizedBox.expand(
         child: StreamVideoRenderer(
           call: widget.call,
           participant: participants.first,
+          videoTrackType: SfuTrackType.video,
         ),
       );
     }
@@ -247,6 +249,7 @@ class _CallScreenState extends State<CallScreen> {
             child: StreamVideoRenderer(
               call: widget.call,
               participant: participants[index],
+              videoTrackType: SfuTrackType.video,
             ),
           ),
         );
@@ -265,11 +268,7 @@ class _CallScreenState extends State<CallScreen> {
             icon: _isCameraEnabled ? Icons.videocam : Icons.videocam_off,
             isActive: _isCameraEnabled,
             onPressed: () async {
-              if (_isCameraEnabled) {
-                await widget.call.camera.disable();
-              } else {
-                await widget.call.camera.enable();
-              }
+              await widget.call.setCameraEnabled(enabled: !_isCameraEnabled);
               setState(() {
                 _isCameraEnabled = !_isCameraEnabled;
               });
@@ -281,11 +280,7 @@ class _CallScreenState extends State<CallScreen> {
             icon: _isMicrophoneEnabled ? Icons.mic : Icons.mic_off,
             isActive: _isMicrophoneEnabled,
             onPressed: () async {
-              if (_isMicrophoneEnabled) {
-                await widget.call.microphone.disable();
-              } else {
-                await widget.call.microphone.enable();
-              }
+              await widget.call.setMicrophoneEnabled(enabled: !_isMicrophoneEnabled);
               setState(() {
                 _isMicrophoneEnabled = !_isMicrophoneEnabled;
               });
@@ -308,7 +303,7 @@ class _CallScreenState extends State<CallScreen> {
             icon: Icons.flip_camera_ios,
             isActive: true,
             onPressed: () async {
-              await widget.call.camera.flip();
+              await widget.call.flipCamera();
             },
           ),
         ],
@@ -368,13 +363,24 @@ class _CallScreenState extends State<CallScreen> {
             ),
           ),
           const Spacer(),
-          StreamBuilder<Duration>(
-            stream: Stream.periodic(const Duration(seconds: 1)),
+          StreamBuilder<CallState>(
+            stream: widget.call.state,
             builder: (context, snapshot) {
-              final duration = widget.call.state.value.duration ?? Duration.zero;
-              return Text(
-                _formatDuration(duration),
-                style: const TextStyle(
+              final callState = snapshot.data;
+              final startedAt = callState?.startedAt;
+              if (startedAt != null) {
+                final duration = DateTime.now().difference(startedAt);
+                return Text(
+                  _formatDuration(duration),
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                );
+              }
+              return const Text(
+                '00:00',
+                style: TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
                 ),

@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:chat_app/data/models/chat_message.dart';
 import 'package:chat_app/data/services/service_locator.dart';
 import 'package:chat_app/data/services/video_call_service.dart';
@@ -98,7 +97,7 @@ class _ChatMessageSceenState extends State<ChatMessageSceen> {
       // Initialize video service if not already done
       if (videoService.streamVideo == null) {
         // You'll need to get these from your Stream dashboard
-        await videoService.initialize(
+        await videoService.initialize( 
           userId: _chatCubit.currentUserId,
           userName: widget.currentUserName,
           apiKey: 'your_stream_api_key', // Replace with your API key
@@ -109,7 +108,7 @@ class _ChatMessageSceenState extends State<ChatMessageSceen> {
       final callId = '${_chatCubit.currentUserId}_${widget.receiverId}_${DateTime.now().millisecondsSinceEpoch}';
       
       await videoService.startCall(
-        callId: callId,
+        callId: callId, 
         memberIds: [widget.receiverId],
         context: context,
       );
