@@ -21,17 +21,9 @@ class VideoCallService {
     required String token,
   }) async {
     try {
-      _currentUser = User(
-        id: userId,
-        name: userName,
-        image: null,
-      );
+      _currentUser = User(id: userId, name: userName, image: null);
 
-      _streamVideo = StreamVideo(
-        apiKey,
-        user: _currentUser!,
-        userToken: token,
-      );
+      _streamVideo = StreamVideo(apiKey, user: _currentUser!, userToken: token);
 
       log('Video call service initialized successfully');
     } catch (e) {
@@ -41,13 +33,10 @@ class VideoCallService {
   }
 
   Future<bool> requestPermissions() async {
-    final permissions = [
-      Permission.camera,
-      Permission.microphone,
-    ];
+    final permissions = [Permission.camera, Permission.microphone];
 
     Map<Permission, PermissionStatus> statuses = await permissions.request();
-    
+
     return statuses.values.every((status) => status.isGranted);
   }
 
@@ -66,7 +55,7 @@ class VideoCallService {
 
     // Create the call with member IDs
     await call.getOrCreate(memberIds: memberIds);
-    
+
     return call;
   }
 
@@ -82,13 +71,11 @@ class VideoCallService {
       }
 
       final call = await createCall(callId: callId, memberIds: memberIds);
-      
+
       if (context.mounted) {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => CallScreen(call: call),
-          ),
+          MaterialPageRoute(builder: (context) => CallScreen(call: call)),
         );
       }
     } catch (e) {
@@ -117,13 +104,11 @@ class VideoCallService {
       );
 
       await call.join();
-      
+
       if (context.mounted) {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => CallScreen(call: call),
-          ),
+          MaterialPageRoute(builder: (context) => CallScreen(call: call)),
         );
       }
     } catch (e) {
@@ -183,7 +168,8 @@ class _CallScreenState extends State<CallScreen> {
           stream: widget.call.state,
           builder: (context, snapshot) {
             final callState = snapshot.data;
-            final participants = callState?.callParticipants.values.toList() ?? [];
+            final participants =
+                callState?.callParticipants.values.toList() ?? [];
 
             return Stack(
               children: [
@@ -206,12 +192,7 @@ class _CallScreenState extends State<CallScreen> {
                 ),
 
                 // Top bar with call info
-                Positioned(
-                  top: 20,
-                  left: 20,
-                  right: 20,
-                  child: _buildTopBar(),
-                ),
+                Positioned(top: 20, left: 20, right: 20, child: _buildTopBar()),
               ],
             );
           },
@@ -280,7 +261,9 @@ class _CallScreenState extends State<CallScreen> {
             icon: _isMicrophoneEnabled ? Icons.mic : Icons.mic_off,
             isActive: _isMicrophoneEnabled,
             onPressed: () async {
-              await widget.call.setMicrophoneEnabled(enabled: !_isMicrophoneEnabled);
+              await widget.call.setMicrophoneEnabled(
+                enabled: !_isMicrophoneEnabled,
+              );
               setState(() {
                 _isMicrophoneEnabled = !_isMicrophoneEnabled;
               });
@@ -330,11 +313,7 @@ class _CallScreenState extends State<CallScreen> {
       ),
       child: IconButton(
         onPressed: onPressed,
-        icon: Icon(
-          icon,
-          color: Colors.white,
-          size: 24,
-        ),
+        icon: Icon(icon, color: Colors.white, size: 24),
       ),
     );
   }
@@ -348,11 +327,7 @@ class _CallScreenState extends State<CallScreen> {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.videocam,
-            color: Colors.white,
-            size: 20,
-          ),
+          const Icon(Icons.videocam, color: Colors.white, size: 20),
           const SizedBox(width: 8),
           const Text(
             'Video Call',
@@ -372,18 +347,12 @@ class _CallScreenState extends State<CallScreen> {
                 final duration = DateTime.now().difference(startedAt);
                 return Text(
                   _formatDuration(duration),
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 );
               }
               return const Text(
                 '00:00',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
               );
             },
           ),
@@ -397,7 +366,7 @@ class _CallScreenState extends State<CallScreen> {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     final seconds = duration.inSeconds.remainder(60);
-    
+
     if (hours > 0) {
       return '${twoDigits(hours)}:${twoDigits(minutes)}:${twoDigits(seconds)}';
     }
